@@ -4,6 +4,8 @@ This is a sample URL shortening service that converts a given URL into a randomi
 It is done by generating a UUIDv4 for each given URL, then storing this URL and the first six characters of the UUID in Firebase.
 A shortened URL is formed by suffix-ing the generated slug with this service's domain name to redirect the user to the target URL.
 
+You can view the deployed demo at [this link](https://gds-interview.et.r.appspot.com/).
+
 ## Environment
 - Developed on Windows 10 with CMD commands, scripts may not be compatible with Bash
 - Node v14
