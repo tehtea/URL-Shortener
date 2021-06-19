@@ -13,9 +13,24 @@ if (isLocal) {
   PROTOCOL = "http";
 }
 
+// adapted URL regex from https://regexr.com/37i6s
+// eslint-disable-next-line max-len
+const URL_REGEX = /(https?:\/\/)?(www\.)?([-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_+.~#?&//=]*))/;
+const HOST_GROUP_INDEX = 3;
+
 firebaseAdmin.initializeApp();
 const db = firebaseAdmin.firestore();
 const shortenedUrlsCollection = db.collection("shortenedUrls");
+
+const validateUrl = (url) => {
+  return URL_REGEX.test(url);
+};
+
+const sanitizeUrl = (url) => {
+  const groups = url.match(URL_REGEX);
+  const host = groups[HOST_GROUP_INDEX];
+  return `www.${host}`;
+};
 
 const lookupSlug = async (slug) => {
   const urlDoc = await shortenedUrlsCollection.doc(slug).get();
@@ -44,16 +59,18 @@ const redirectToLongUrl = async (req, res) => {
     const errorMessage = "Unexpected Internal Server " +
       "Error encountered. Please try again later.";
     return res.status(httpStatus.INTERNAL_SERVER_ERROR)
-        .send(errorMessage);
+        .send({message: errorMessage});
   }
 };
 
 const createSlug = async (req, res) => {
   try {
-    const longUrl = get(req.body, "longUrl");
-    if (!longUrl) {
+    let longUrl = get(req.body, "longUrl");
+    if (!validateUrl(longUrl)) {
       return res.status(httpStatus.BAD_REQUEST).send("URL is invalid");
     }
+    longUrl = sanitizeUrl(longUrl);
+
     const existingLongUrlDoc = await shortenedUrlsCollection
         .where("longUrl", "==", longUrl).get();
     if (!existingLongUrlDoc.empty) {
@@ -62,6 +79,7 @@ const createSlug = async (req, res) => {
       return res.status(httpStatus.OK)
           .send(successMessage);
     }
+
     // first six characters of UUID sufficient
     const slug = uuidv4().substring(0, 6);
     await shortenedUrlsCollection.doc(slug).set({longUrl, slug}, {merge: true});
@@ -69,9 +87,10 @@ const createSlug = async (req, res) => {
     return res.status(httpStatus.OK).send(successMessage);
   } catch (error) {
     console.error(error);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send(
-        "Unexpected Internal Server Error " +
-        "encountered. Please try again later.");
+    const errorMessage = "Unexpected Internal Server Error " +
+    "encountered. Please try again later.";
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR)
+        .send({message: errorMessage});
   }
 };
 

@@ -18,7 +18,7 @@ A shortened URL is formed by suffix-ing the generated slug with this service's d
 - To lint the project, use `npm run lint`
 
 ## Assumptions
-- The long URL provided by client is always valid
+- The long URL provided by client is reachable
 - First six characters of UUIDv4 is sufficient to minimize shortened URL collisions in db
 - Validity of shortened URLs not guaranteed - old shortened URLs are overwritten in event of collision
 

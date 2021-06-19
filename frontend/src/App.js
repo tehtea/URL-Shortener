@@ -56,8 +56,10 @@ const App = () => {
         payload: shortUrl,
       });
     } catch (error) {
-      const errorMessage = error?.response ?
-        error.response : "Unexpected error occurred while shortening URL";
+      console.error("See error: ", error);
+      const errorMessage = error?.response?.message ?
+        error?.response?.message :
+        "Unexpected error occurred while shortening URL";
       dispatch({
         type: ACTION_TYPES.SUBMIT_FAILURE,
         payload: errorMessage,
